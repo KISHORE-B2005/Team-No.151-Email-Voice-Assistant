@@ -1,0 +1,317 @@
+import smtplib
+import speech_recognition as sr
+import pyttsx3
+import datetime
+import os
+import wikipedia
+import pywhatkit
+import pyautogui
+import cv2
+import webbrowser
+import psutil
+import requests
+import random
+import time
+from PIL import Image
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+
+engine = pyttsx3.init('sapi5')
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)
+
+def speak(audio):
+    engine.say(audio)
+    engine.runAndWait()
+
+def recognize_command():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        r.pause_threshold = 1
+        r.adjust_for_ambient_noise(source, duration=1)
+        audio = r.listen(source)
+    try:
+        print("Processing...")
+        query = r.recognize_google(audio, language='en-in')
+        print(f"You said: {query}\n")
+    except Exception as e:
+        print("...", e)
+        speak("...")
+        return "none"
+    return query.lower()
+
+def confirm_email():
+    speak("Please say the recipient's email address.")
+    email = recognize_command()
+    speak(f"Did you mean {email}? Please confirm.")
+    confirmation = recognize_command().lower()
+
+    if "yes" in confirmation:
+        return email.replace(" ", "")  
+    else:
+        speak("Please type the correct email address.")
+        email = input("Type the correct email address: ")
+        return email.strip()  
+
+def send_email(recipient, subject, message):
+    sender_email = "kishore2005savetha@gmail.com"  
+    app_password = "sbqg mfgu wbpo hjeg"  
+
+    
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = recipient
+    msg['Subject'] = subject
+    msg.attach(MIMEText(message, 'plain'))
+
+    try:
+        # SMTP server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, app_password)
+        text = msg.as_string()
+        server.sendmail(sender_email, recipient, text)
+        server.quit()
+        speak("Email sent successfully.")
+        print("Email sent successfully.")
+    except Exception as e:
+        speak(f"An error occurred: {str(e)}")
+        print(f"An error occurred: {str(e)}")
+
+def wishings():
+    hour = datetime.datetime.now().hour
+    if 0 <= hour < 12:
+        speak("Good morning Boss.")
+        print("Good morning Boss.")
+    elif 12 <= hour < 17:
+        speak("Good Afternoon Boss.")
+        print("Good Afternoon Boss.")
+    elif 17 <= hour < 21:
+        speak("Good Evening Boss.")
+        print("Good Evening Boss.")
+    else:
+        speak("Good night Boss.")
+        print("Good night Boss.")
+
+def activate_jarvis():
+    speak("Atlas is now in sleep mode.")
+    print("Atlas is now in sleep mode.")
+    while True:
+        command = recognize_command().lower()
+        if "atlas" in command:
+            speak("Yes Boss, I'm here. How can I help you today?")
+            print("Yes Boss, I'M HERE. How can I help you today?")
+            return
+
+def face_scan():
+    speak("Opening camera for scanning..Boss")
+    print("Opening camera for scanning..Boss")
+    camera = cv2.VideoCapture(0)
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    while True:
+        ret, frame = camera.read()
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        for (x, y, w, h) in faces:
+            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+            speak("Face detected.")
+            print("Face detected.")
+        cv2.imshow('Face Scan', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    camera.release()
+    cv2.destroyAllWindows()
+
+def get_system_information():
+    cpu_usage = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory()
+    battery = psutil.sensors_battery()
+
+    speak(f"CPU Usage: {cpu_usage} percent")
+    print(f"CPU Usage: {cpu_usage} percent")
+
+    total_memory_gb = round(memory.total / (1024 * 1024 * 1024), 2)
+    available_memory_gb = round(memory.available / (1024 * 1024 * 1024), 2)
+    speak(f"Total Memory: {total_memory_gb} gigabytes")
+    print(f"Total Memory: {total_memory_gb} gigabytes")
+    speak(f"Available Memory: {available_memory_gb} gigabytes")
+    print(f"Available Memory: {available_memory_gb} gigabytes")
+
+    if battery:
+        plugged = "Plugged In" if battery.power_plugged else "Not Plugged In"
+        speak(f"Battery Percentage: {battery.percent} percent ({plugged})")
+        print(f"Battery Percentage: {battery.percent} percent ({plugged})")
+        speak(f"Time left: {battery.secsleft / 3600:.2f} hours")
+        print(f"Time left: {battery.secsleft / 3600:.2f} hours")
+
+    if cpu_usage < 75 and available_memory_gb > 2 and (not battery or battery.percent > 20):
+        speak("The system is in good working condition, Boss.")
+        print("The system is in good working condition, Boss.")
+    else:
+        speak("The system is experiencing some issues, Boss.")
+        print("The system is experiencing some issues, Boss.")
+
+def get_weather(city):
+    api_key = '4821f625e71cb5b083906fbf95527a8f'
+    base_url = 'https://api.openweathermap.org/data/2.5/weather'
+    params = {'q': city, 'appid': api_key, 'units': 'metric'}
+
+    response = requests.get(base_url, params=params)
+    data = response.json()
+
+    if data['cod'] == 200:
+        weather_desc = data['weather'][0]['description']
+        temperature = data['main']['temp']
+        humidity = data['main']['humidity']
+        wind_speed = data['wind']['speed']
+
+        return f"The weather in {city} is {weather_desc}. Temperature: {temperature}°C, Humidity: {humidity}%, Wind Speed: {wind_speed} m/s. Boss, it's {weather_desc} Boss!!."
+    else:
+        return "Sorry Sir, I couldn't fetch the weather information at the moment."
+
+def list_running_processes():
+    processes = [(p.info['pid'], p.info['name'], p.info['cpu_percent']) for p in psutil.process_iter(['pid', 'name', 'cpu_percent'])]
+    processes.sort(key=lambda x: x[2], reverse=True)
+    speak("Listing top 5 processes by CPU usage, Boss.")
+    for pid, name, cpu in processes[:5]:
+        speak(f"Process {name} with PID {pid} is using {cpu} percent CPU.")
+        print(f"Process: {name}, PID: {pid}, CPU: {cpu}%")
+
+
+def search_on_google(query):
+    query = query.replace("search", "")
+    speak("Searching on Google... Boss")
+    print("Searching on Google... Boss")
+    webbrowser.open(f"https://www.google.com/search?q={query}")
+
+def search_on_edge(query):
+    query = query.replace("search", "")
+    speak("Searching on microsoft edge... Boss")
+    print("Searching on microsoft edge... Boss")
+    webbrowser.open(f"https://www.bing.com/search?q={query}")
+    
+def main():
+    wishings()
+    activate_jarvis()
+    while True:
+        query = recognize_command()
+        
+        if 'time' in query:
+            strTime = datetime.datetime.now().strftime("%H:%M")
+            speak(f"The time is {strTime} Boss..")
+            print(f"The time is {strTime} Boss..")
+            
+        elif 'open microsoft edge' in query:
+            speak("Opening Microsoft Edge..Boss")
+            print("Opening Microsoft Edge..Boss")
+            os.startfile("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe")
+        
+        elif 'open chrome' in query:
+            speak("Opening Chrome..Boss")
+            print("Opening Chrome..Boss")
+            os.startfile("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe")
+
+        elif 'wikipedia' in query:
+            speak("Searching in Wikipedia,Boss.")
+            print("Searching in Wikipedia,Boss.")
+            query = query.replace("wikipedia", "")
+            results = wikipedia.summary(query, sentences= 3)
+            speak(f"According to Wikipedia,{results}...Boss")
+            print(f"According to Wikipedia, {results}...Boss")
+        
+        elif 'search in chrome' in query:
+            speak("What should I search for you,Boss?")
+            print("What should I search for you,Boss?")
+            search_query = recognize_command()
+            url = f"https://www.google.com/search?q={search_query}"
+            webbrowser.open(url)
+        elif'what is the meaning of atlas' in query or 'what is meant by atlas' in query:
+            speak("It is a voice assistant which is none other than me..which is briefly know as Advanced Tech Language Assistant System ")
+            print("It is a voice assistant which is none other than me..which is briefly know as Advanced Tech Language Assistant System ")
+            
+        elif 'search in edge' in query:
+            speak("What should I search for you, Sir?")
+            print("What should I search for you, Sir?")
+            search_query = recognize_command()
+            url = f"https://www.bing.com/search?q={query}"
+            webbrowser.open(url)
+
+        elif 'play' in query:
+            song = query.replace('play', '')
+            speak(f"Playing {song}, Boss.")
+            print(f"Playing {song}, Boss.")
+            pywhatkit.playonyt(song)
+        
+        elif 'type' in query:
+            speak('Yes Boss.')
+            while True:
+                writeInNotepad = recognize_command()
+                if writeInNotepad == 'exit typing':
+                    speak("Done sir.")
+                    print("Done sir.")
+                    break
+                else:
+                    pyautogui.write(writeInNotepad)
+
+        
+        elif 'open pictures' in query:
+            speak("Opening Pictures...Boss")
+            print("Opening Pictures...Boss")
+            os.startfile("C:\\Users\\91755\\Pictures")
+        
+        elif 'email' in query:
+            speak("Let's send an email.")
+            recipient_email = confirm_email()
+            if recipient_email == "none":
+                speak("I couldn't recognize the email address Boss. Please try again.")
+                continue
+            
+            speak("What should be the subject of the email Boss?")
+            subject = recognize_command()
+            
+            speak("What should the message be Boss?")
+            message = recognize_command()
+            
+            if subject != "none" and message != "none":
+                send_email(recipient_email, subject, message)
+            else:
+                speak("I couldn't understand one of the inputs Boss. Please try again.")
+                print("I couldn't understand one of the inputs Boss. Please try again.")
+        
+        elif 'weather' in query:
+            speak("Which city weather do you want to know Boss?")
+            city = recognize_command()
+            weather_info = get_weather(city)
+            speak(weather_info)
+            print(weather_info)
+        
+        elif 'system info' in query:
+            get_system_information()
+        
+        elif 'face scan' in query:
+            face_scan()
+        
+        elif 'running processes' in query:
+            list_running_processes()
+
+        elif 'thankyou' in query:
+            speak("your welcome Boss..")
+            print("your welcome Boss..")
+        
+        elif "close the window" in query or "close the application" in query:
+            speak('Closing the window Boss.')
+            print('Closing the window Boss.')
+            pyautogui.hotkey('ctrl', 'w')
+        
+        elif 'sleep' in query:
+            command = activate_jarvis()
+        
+        elif 'exit program' in query:
+            speak("Goodbye Boss!..See you Soon")
+            print("Goodbye Boss!..See you Soon")
+            break
+
+if __name__ == "__main__":
+    main()
