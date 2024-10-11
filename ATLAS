@@ -56,8 +56,8 @@ def confirm_email():
         return email.strip()  
 
 def send_email(recipient, subject, message):
-    sender_email = "kishore2005savetha@gmail.com"  
-    app_password = "sbqg mfgu wbpo hjeg"  
+    sender_email = "example@gmail.com"  // your email ID
+    app_password = "your AppPassword."  // your AppPassword
 
     
     msg = MIMEMultipart()
@@ -154,7 +154,7 @@ def get_system_information():
         print("The system is experiencing some issues, Boss.")
 
 def get_weather(city):
-    api_key = '4821f625e71cb5b083906fbf95527a8f'
+    api_key = 'API key of the user in the website (openweathermap)'
     base_url = 'https://api.openweathermap.org/data/2.5/weather'
     params = {'q': city, 'appid': api_key, 'units': 'metric'}
 
@@ -206,12 +206,12 @@ def main():
         elif 'open microsoft edge' in query:
             speak("Opening Microsoft Edge..Boss")
             print("Opening Microsoft Edge..Boss")
-            os.startfile("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe")
+            os.startfile("Path for Microsoft Edge App")
         
         elif 'open chrome' in query:
             speak("Opening Chrome..Boss")
             print("Opening Chrome..Boss")
-            os.startfile("C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe")
+            os.startfile("Path for Google Chrome App")
 
         elif 'wikipedia' in query:
             speak("Searching in Wikipedia,Boss.")
@@ -227,6 +227,7 @@ def main():
             search_query = recognize_command()
             url = f"https://www.google.com/search?q={search_query}"
             webbrowser.open(url)
+d
         elif'what is the meaning of atlas' in query or 'what is meant by atlas' in query:
             speak("It is a voice assistant which is none other than me..which is briefly know as Advanced Tech Language Assistant System ")
             print("It is a voice assistant which is none other than me..which is briefly know as Advanced Tech Language Assistant System ")
@@ -259,7 +260,7 @@ def main():
         elif 'open pictures' in query:
             speak("Opening Pictures...Boss")
             print("Opening Pictures...Boss")
-            os.startfile("C:\\Users\\91755\\Pictures")
+            os.startfile("Path for the picture files")
         
         elif 'email' in query:
             speak("Let's send an email.")
