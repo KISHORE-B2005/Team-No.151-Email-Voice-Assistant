@@ -1,4 +1,4 @@
-# Voice Based Email Assistant
+# Email Voice Assistant
 - ### Intoduction:
 This project is a Voice-Based Email Sender, designed to simplify the process of composing and sending emails by using voice commands. With this Python-based assistant, users can dictate the recipient's email address, the subject, and the message body, making email sending hands-free and more efficient.
 The assistant utilizes speech recognition to convert spoken words into text and confirms the details before sending the email. Additionally, it provides voice feedback for user actions, ensuring an interactive and user-friendly experience. Error handling is integrated to catch invalid email addresses and network issues, offering smooth operation even in case of common errors.
