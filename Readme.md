@@ -16,3 +16,14 @@ A Python-based voice assistant that allows users to send  emails through voice c
 - imaplib: For retrieving and reading emails from the inbox.
 - Email and MIME libraries: To format and send HTML/text emails.
 - Google API (Optional): Can be integrated for Gmail accounts using OAuth 2.0 for better security.
+- ### Files Needed to download:
+- If you're using a virtual environment, ensure you activate it before installing these packages.
+   - #### speech_recognition: For recognizing and converting speech to text. -------------------```pip install SpeechRecognition```
+   - #### pyttsx3: For text-to-speech conversion. --------------------------------------------------```pip install pyttsx3```
+   - #### wikipedia: For fetching information from Wikipedia.-------------------------------------```pip install wikipedia```
+   - #### pywhatkit: For playing songs on YouTube and sending messages through WhatsApp.```pip install pywhatkit```
+   - #### pyautogui: For controlling mouse and keyboard actions.--------------------------------```pip install pyautogui```
+   - #### opencv-python (cv2): For image and video processing.----------------------------------```pip install opencv-python```
+   - #### psutil: For accessing system information.-------------------------------------------------```pip install psutil```
+   - #### requests: For making HTTP requests to web services.------------------------------------```pip install requests```
+   - #### [smtplib, webbrowser, email.mime]: These are a built-in Python library, so no installation is needed.
