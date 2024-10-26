@@ -13,8 +13,12 @@ import requests
 import random
 import time
 from PIL import Image
+import imaplib
+import email
+from email.header import decode_header
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from PIL import Image
 
 
 engine = pyttsx3.init('sapi5')
@@ -56,10 +60,10 @@ def confirm_email():
         return email.strip()  
 
 def send_email(recipient, subject, message):
-    sender_email = "example@gmail.com"  // your email ID
-    app_password = "your AppPassword."  // your AppPassword
+    sender_email = "//your email address"  
+    app_password = "//your App password"  
 
-    
+
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = recipient
@@ -67,7 +71,6 @@ def send_email(recipient, subject, message):
     msg.attach(MIMEText(message, 'plain'))
 
     try:
-        # SMTP server
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(sender_email, app_password)
@@ -76,6 +79,63 @@ def send_email(recipient, subject, message):
         server.quit()
         speak("Email sent successfully.")
         print("Email sent successfully.")
+    except Exception as e:
+        speak(f"An error occurred: {str(e)}")
+        print(f"An error occurred: {str(e)}")
+
+def read_emails():
+    username = "// your email address"
+    app_password = "// your App password"
+
+    try:
+        mail = imaplib.IMAP4_SSL("imap.gmail.com")
+        mail.login(username, app_password)
+        mail.select("inbox")
+
+        status, messages = mail.search(None, '(UNSEEN)')
+
+        if status == "OK":
+            messages = messages[0].split()
+            if not messages:
+                speak("You have no new emails, Boss.")
+                print("You have no new emails, Boss.")
+                return
+
+            speak(f"You have {len(messages)} new emails, Boss.")
+            print(f"You have {len(messages)} new emails, Boss.")
+
+            for num in messages[-5:]:
+                status, msg_data = mail.fetch(num, "(RFC822)")
+                for response_part in msg_data:
+                    if isinstance(response_part, tuple):
+                        msg = email.message_from_bytes(response_part[1])
+                        subject, encoding = decode_header(msg["Subject"])[0]
+                        if isinstance(subject, bytes):
+                            subject = subject.decode(encoding if encoding else "utf-8")
+                        from_ = msg.get("From")
+                        
+                        speak(f"Email from {from_}")
+                        print(f"Email from {from_}")
+                        speak(f"Subject: {subject}")
+                        print(f"Subject: {subject}")
+
+                        if msg.is_multipart():
+                            for part in msg.walk():
+                                content_type = part.get_content_type()
+                                if content_type == "text/plain":
+                                    body = part.get_payload(decode=True).decode()
+                                    speak(f"Message: {body}")
+                                    print(f"Message: {body}")
+                                    break
+                        else:
+                            body = msg.get_payload(decode=True).decode()
+                            speak(f"Message: {body}")
+                            print(f"Message: {body}")
+        else:
+            speak("I couldn't retrieve your emails, Boss.")
+            print("I couldn't retrieve your emails, Boss.")
+
+        mail.logout()
     except Exception as e:
         speak(f"An error occurred: {str(e)}")
         print(f"An error occurred: {str(e)}")
@@ -154,7 +214,7 @@ def get_system_information():
         print("The system is experiencing some issues, Boss.")
 
 def get_weather(city):
-    api_key = 'API key of the user in the website (openweathermap)'
+    api_key = '// API key of yours in the website(Openweathermap)'
     base_url = 'https://api.openweathermap.org/data/2.5/weather'
     params = {'q': city, 'appid': api_key, 'units': 'metric'}
 
@@ -206,12 +266,12 @@ def main():
         elif 'open microsoft edge' in query:
             speak("Opening Microsoft Edge..Boss")
             print("Opening Microsoft Edge..Boss")
-            os.startfile("Path for Microsoft Edge App")
+            os.startfile("// Path for your microsoft edge file")
         
         elif 'open chrome' in query:
             speak("Opening Chrome..Boss")
             print("Opening Chrome..Boss")
-            os.startfile("Path for Google Chrome App")
+            os.startfile("// Path for your google chrome file")
 
         elif 'wikipedia' in query:
             speak("Searching in Wikipedia,Boss.")
@@ -227,7 +287,6 @@ def main():
             search_query = recognize_command()
             url = f"https://www.google.com/search?q={search_query}"
             webbrowser.open(url)
-d
         elif'what is the meaning of atlas' in query or 'what is meant by atlas' in query:
             speak("It is a voice assistant which is none other than me..which is briefly know as Advanced Tech Language Assistant System ")
             print("It is a voice assistant which is none other than me..which is briefly know as Advanced Tech Language Assistant System ")
@@ -243,25 +302,28 @@ d
             song = query.replace('play', '')
             speak(f"Playing {song}, Boss.")
             print(f"Playing {song}, Boss.")
-            pywhatkit.playonyt(song)
+            webbrowser.open(f"https://www.youtube.com/results?search_query={song}")
         
         elif 'type' in query:
             speak('Yes Boss.')
             while True:
                 writeInNotepad = recognize_command()
                 if writeInNotepad == 'exit typing':
-                    speak("Done sir.")
-                    print("Done sir.")
+                    speak("Done Boss.")
+                    print("Done Boss.")
                     break
                 else:
                     pyautogui.write(writeInNotepad)
 
-        
+
         elif 'open pictures' in query:
             speak("Opening Pictures...Boss")
             print("Opening Pictures...Boss")
-            os.startfile("Path for the picture files")
+            os.startfile("// Path for your picture files")
         
+        elif "read my emails" in query:
+            read_emails()
+
         elif 'email' in query:
             speak("Let's send an email.")
             recipient_email = confirm_email()
@@ -280,7 +342,7 @@ d
             else:
                 speak("I couldn't understand one of the inputs Boss. Please try again.")
                 print("I couldn't understand one of the inputs Boss. Please try again.")
-        
+         
         elif 'weather' in query:
             speak("Which city weather do you want to know Boss?")
             city = recognize_command()
